@@ -1,25 +1,39 @@
+# Build stage
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev for TypeScript)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build TypeScript
+RUN npm run build
+
+# Production stage
 FROM node:18-alpine
 
 WORKDIR /app
 
-# 의존성 설치
+# Copy package files
 COPY package*.json ./
+
+# Install only production dependencies
 RUN npm ci --only=production
 
-# 소스 코드 복사
-COPY . .
+# Copy built files from builder
+COPY --from=builder /app/dist ./dist
 
-# TypeScript 빌드
-RUN npm run build
-
-# 포트 노출
+# Expose port
 EXPOSE 8081
 
-# 실행
+# Set environment to production
+ENV NODE_ENV=production
+
+# Start the application
 CMD ["npm", "start"]
-
-
-
-
-
-

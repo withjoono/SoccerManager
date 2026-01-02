@@ -1,0 +1,31 @@
+# Google Cloud Build 설정 - Chatbot
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/soccer-chatbot:$COMMIT_SHA', '.']
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/soccer-chatbot:$COMMIT_SHA']
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'soccer-chatbot'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/soccer-chatbot:$COMMIT_SHA'
+      - '--region'
+      - 'asia-northeast3'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'BACKEND_API_URL=https://soccer-backend-5hlqw2mgma-du.a.run.app,NODE_ENV=production'
+      - '--port'
+      - '8081'
+
+images:
+  - 'gcr.io/$PROJECT_ID/soccer-chatbot:$COMMIT_SHA'
