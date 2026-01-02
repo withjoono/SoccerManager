@@ -81,3 +81,5 @@ export const deleteEvent = asyncHandler(async (req: Request, res: Response<ApiRe
 
 
 
+
+
