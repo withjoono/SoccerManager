@@ -1,0 +1,222 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========================================
+    // 헬퍼 함수
+    // ========================================
+    
+    // 인증된 사용자인지 확인
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Admin 권한 확인
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'admin';
+    }
+    
+    // Manager 이상 권한 확인
+    function isManager() {
+      return isAuthenticated() && 
+             (request.auth.token.role == 'admin' || 
+              request.auth.token.role == 'manager');
+    }
+    
+    // 본인 또는 Manager 이상인지 확인
+    function isSelfOrManager(userId) {
+      return isAuthenticated() && 
+             (request.auth.uid == userId || isManager());
+    }
+    
+    // ========================================
+    // Members 컬렉션
+    // ========================================
+    match /members/{memberId} {
+      // 읽기: 인증된 모든 사용자
+      allow read: if isAuthenticated();
+      
+      // 생성: Manager 이상
+      allow create: if isManager() &&
+                       request.resource.data.keys().hasAll(['name', 'isActive', 'createdAt']) &&
+                       request.resource.data.isActive == true;
+      
+      // 수정: Manager 이상 또는 본인 (제한된 필드만)
+      allow update: if isManager() ||
+                       (isAuthenticated() && 
+                        request.auth.uid == memberId &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['isActive', 'createdAt']));
+      
+      // 삭제: Admin만 (실제로는 soft delete로 isActive = false)
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Teams 컬렉션
+    // ========================================
+    match /teams/{teamId} {
+      // 읽기: 인증된 모든 사용자
+      allow read: if isAuthenticated();
+      
+      // 생성, 수정: Manager 이상
+      allow create, update: if isManager() &&
+                               request.resource.data.keys().hasAll(['name', 'isActive']);
+      
+      // 삭제: Admin만
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Matches 컬렉션
+    // ========================================
+    match /matches/{matchId} {
+      // 읽기: 인증된 모든 사용자
+      allow read: if isAuthenticated();
+      
+      // 생성: Manager 이상
+      allow create: if isManager() &&
+                       request.resource.data.keys().hasAll(['date', 'status', 'scoreA', 'scoreB', 'matchNumber']) &&
+                       request.resource.data.status == 'scheduled' &&
+                       request.resource.data.scoreA == 0 &&
+                       request.resource.data.scoreB == 0;
+      
+      // 수정: Manager 이상
+      // - 스코어 업데이트는 경기가 completed 상태일 때만
+      allow update: if isManager() &&
+                       (request.resource.data.status == 'completed' ||
+                        request.resource.data.status == resource.data.status);
+      
+      // 삭제: Admin만
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Attendances 컬렉션
+    // ========================================
+    match /attendances/{attendanceId} {
+      // 읽기: 인증된 모든 사용자
+      allow read: if isAuthenticated();
+      
+      // 생성: Manager 이상 또는 본인
+      allow create: if isManager() ||
+                       (isAuthenticated() && 
+                        request.resource.data.memberId == request.auth.token.memberId);
+      
+      // 수정: Manager 이상 또는 본인 (본인은 status만 변경 가능)
+      allow update: if isManager() ||
+                       (isAuthenticated() && 
+                        resource.data.memberId == request.auth.token.memberId &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['matchId', 'memberId']));
+      
+      // 삭제: Admin만
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // TeamAssignments 컬렉션
+    // ========================================
+    match /teamAssignments/{assignmentId} {
+      // 읽기: 인증된 모든 사용자
+      allow read: if isAuthenticated();
+      
+      // 생성, 수정: Manager 이상
+      allow create, update: if isManager() &&
+                               request.resource.data.keys().hasAll(['matchId', 'teamA', 'teamB']);
+      
+      // 삭제: Admin만
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // MatchEvents 컬렉션
+    // ========================================
+    match /matchEvents/{eventId} {
+      // 읽기: 인증된 모든 사용자
+      allow read: if isAuthenticated();
+      
+      // 생성: Manager 이상
+      allow create: if isManager() &&
+                       request.resource.data.keys().hasAll(['matchId', 'memberId', 'team', 'type']) &&
+                       request.resource.data.type in ['goal', 'assist', 'yellowCard', 'redCard', 'ownGoal'];
+      
+      // 수정: Manager 이상
+      allow update: if isManager();
+      
+      // 삭제: Manager 이상
+      allow delete: if isManager();
+    }
+    
+    // ========================================
+    // Notices 컬렉션
+    // ========================================
+    match /notices/{noticeId} {
+      // 읽기: 인증된 모든 사용자 (활성 공지만)
+      allow read: if isAuthenticated() && resource.data.isActive == true;
+      
+      // 생성, 수정: Manager 이상
+      allow create, update: if isManager() &&
+                               request.resource.data.keys().hasAll(['title', 'content', 'important', 'isActive']);
+      
+      // 삭제: Admin만
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Notifications 컬렉션
+    // ========================================
+    match /notifications/{notificationId} {
+      // 읽기: 본인의 알림만 또는 Manager 이상
+      allow read: if isAuthenticated() &&
+                     (resource.data.userId == request.auth.token.memberId || 
+                      resource.data.userId == null ||
+                      isManager());
+      
+      // 생성: Manager 이상 (시스템에서 자동 생성)
+      allow create: if isManager() &&
+                       request.resource.data.keys().hasAll(['type', 'title', 'content', 'isRead']) &&
+                       request.resource.data.isRead == false;
+      
+      // 수정: 본인의 알림만 (isRead만 변경 가능) 또는 Manager 이상
+      allow update: if (isAuthenticated() &&
+                        resource.data.userId == request.auth.token.memberId &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['userId', 'type', 'title', 'content'])) ||
+                       isManager();
+      
+      // 삭제: 본인의 알림 또는 Admin
+      allow delete: if (isAuthenticated() && 
+                        resource.data.userId == request.auth.token.memberId) ||
+                       isAdmin();
+    }
+    
+    // ========================================
+    // Statistics 컬렉션
+    // ========================================
+    match /statistics/{statisticId} {
+      // 읽기: 인증된 모든 사용자
+      allow read: if isAuthenticated();
+      
+      // 생성, 수정: 시스템만 (Cloud Function 또는 Admin)
+      allow create, update: if isAdmin();
+      
+      // 삭제: Admin만
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // 기본 규칙: 모든 다른 경로는 차단
+    // ========================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+
+
+
+
+

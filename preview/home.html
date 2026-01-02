@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>홈</title>
+    <script src="gesture-handler.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .phone {
+            width: 100%;
+            max-width: 400px;
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        
+        .screen {
+            background: #F3F4F6;
+            border-radius: 32px;
+            overflow: hidden;
+            height: 850px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 헤더 */
+        .header {
+            background: white;
+            padding: 16px 20px;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .notification-icon {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        /* 컨텐츠 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 80px;
+        }
+        
+        .section {
+            margin-top: 20px;
+            padding: 0 16px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1F2937;
+            margin-left: 8px;
+            flex: 1;
+        }
+        
+        .view-all {
+            font-size: 14px;
+            color: #1E3A8A;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .empty-text {
+            font-size: 14px;
+            color: #6B7280;
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+        }
+        
+        /* 공지사항 카드 */
+        .notice-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #E5E7EB;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .notice-card.important {
+            border-left-color: #EF4444;
+            background: #FEF2F2;
+        }
+        
+        .notice-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .important-badge {
+            background: #EF4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .notice-date {
+            font-size: 12px;
+            color: #6B7280;
+        }
+        
+        .notice-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 4px;
+        }
+        
+        .notice-content {
+            font-size: 14px;
+            color: #6B7280;
+            line-height: 1.4;
+        }
+        
+        /* 다음 경기 카드 */
+        .next-match-container {
+            position: relative;
+            margin-bottom: 12px;
+        }
+        
+        .next-badge {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: #10B981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* 경기 카드 */
+        .match-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        
+        .match-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .match-date {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .match-title {
+            font-size: 14px;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+        
+        .match-location {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            color: #6B7280;
+            font-size: 14px;
+        }
+        
+        .score-container {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #F3F4F6;
+        }
+        
+        .score-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1E3A8A;
+            text-align: center;
+        }
+        
+        .match-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+        
+        .chevron {
+            color: #1E3A8A;
+            font-size: 20px;
+        }
+        
+        /* 하단 탭 */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            border-top: 1px solid #E5E7EB;
+            padding: 8px 0 12px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .nav-icon { font-size: 20px; opacity: 0.5; }
+        .nav-label { font-size: 10px; color: #9CA3AF; font-weight: 600; }
+        .nav-item.active .nav-icon { opacity: 1; }
+        .nav-item.active .nav-label { color: #1E3A8A; }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <!-- 헤더 -->
+            <div class="header">
+                <div class="header-title">⚽ Soccer</div>
+                <div class="notification-icon" onclick="openNotifications()">🔔</div>
+            </div>
+            
+            <!-- 컨텐츠 -->
+            <div class="content">
+                <!-- 공지사항 섹션 -->
+                <div class="section">
+                    <div class="section-header">
+                        <span>📢</span>
+                        <div class="section-title">공지사항</div>
+                    </div>
+                    
+                    <div class="notice-card important">
+                        <div class="notice-header">
+                            <div class="important-badge">중요</div>
+                            <div class="notice-date">12월 25일</div>
+                        </div>
+                        <div class="notice-title">새해 첫 경기 일정 공지</div>
+                        <div class="notice-content">2026년 첫 경기가 1월 8일 수요일에 진행됩니다.</div>
+                    </div>
+                    
+                    <div class="notice-card">
+                        <div class="notice-header">
+                            <div class="notice-date">12월 28일</div>
+                        </div>
+                        <div class="notice-title">경기장 위치 변경 안내</div>
+                        <div class="notice-content">다음 주 경기장이 강남 풋살장으로 변경되었습니다.</div>
+                    </div>
+                </div>
+                
+                <!-- 다음 경기 섹션 -->
+                <div class="section">
+                    <div class="section-header">
+                        <span>⚽</span>
+                        <div class="section-title">다음 경기</div>
+                    </div>
+                    
+                    <div class="next-match-container">
+                        <div class="next-badge">NEXT</div>
+                        <div class="match-card" onclick="goToMatch()">
+                            <div class="match-date">1월 8일 (수) 15:00</div>
+                            <div class="match-title">정기 경기</div>
+                            <div class="match-location">
+                                <span>📍</span>
+                                <span style="margin-left: 4px;">서울 운동장</span>
+                            </div>
+                            <div class="match-footer">
+                                <span class="chevron">›</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 최근 경기 섹션 -->
+                <div class="section">
+                    <div class="section-header">
+                        <span>🏆</span>
+                        <div class="section-title">최근 경기</div>
+                        <div class="view-all" onclick="goToStats()">전체보기 →</div>
+                    </div>
+                    
+                    <div class="match-card" onclick="goToMatch()">
+                        <div class="match-date">12월 31일 (수) 15:00</div>
+                        <div class="match-title">2025년 마지막 경기</div>
+                        <div class="match-location">
+                            <span>📍</span>
+                            <span style="margin-left: 4px;">서울 운동장</span>
+                        </div>
+                        <div class="score-container">
+                            <div class="score-text">A팀 3 : 2 B팀</div>
+                        </div>
+                        <div class="match-footer">
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+                    
+                    <div class="match-card" onclick="goToMatch()">
+                        <div class="match-date">12월 24일 (화) 18:00</div>
+                        <div class="match-title">크리스마스 이브 경기</div>
+                        <div class="match-location">
+                            <span>📍</span>
+                            <span style="margin-left: 4px;">강남 풋살장</span>
+                        </div>
+                        <div class="score-container">
+                            <div class="score-text">A팀 5 : 3 B팀</div>
+                        </div>
+                        <div class="match-footer">
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+                    
+                    <div class="match-card" onclick="goToMatch()">
+                        <div class="match-date">12월 17일 (수) 15:00</div>
+                        <div class="match-title">정기 경기</div>
+                        <div class="match-location">
+                            <span>📍</span>
+                            <span style="margin-left: 4px;">서울 운동장</span>
+                        </div>
+                        <div class="score-container">
+                            <div class="score-text">A팀 2 : 4 B팀</div>
+                        </div>
+                        <div class="match-footer">
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 하단 탭 -->
+            <div class="bottom-nav">
+                <div class="nav-item active"><div class="nav-icon">🏠</div><div class="nav-label">홈</div></div>
+                <div class="nav-item" onclick="goToMatchForm()"><div class="nav-icon">➕</div><div class="nav-label">경기등록</div></div>
+                <div class="nav-item" onclick="goToAttendance()"><div class="nav-icon">✓</div><div class="nav-label">출석체크</div></div>
+                <div class="nav-item" onclick="goToTeam()"><div class="nav-icon">👥</div><div class="nav-label">팀구성</div></div>
+                <div class="nav-item" onclick="goToMatchResult()"><div class="nav-icon">🏆</div><div class="nav-label">경기결과</div></div>
+                <div class="nav-item" onclick="goToStats()"><div class="nav-icon">📊</div><div class="nav-label">통계순위</div></div>
+                <div class="nav-item" onclick="goToMembers()"><div class="nav-icon">👤</div><div class="nav-label">회원/팀</div></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openNotifications() {
+            window.location.href = 'notifications.html';
+        }
+        
+        function goToMatchForm() {
+            window.location.href = 'match-form.html';
+        }
+        
+        function goToAttendance() {
+            window.location.href = 'attendance.html';
+        }
+        
+        function goToTeam() {
+            window.location.href = 'team-assignment.html';
+        }
+        
+        function goToMatch() {
+            window.location.href = 'match-result.html';
+        }
+        
+        function goToMatchResult() {
+            window.location.href = 'match-result.html';
+        }
+        
+        function goToStats() {
+            window.location.href = 'stats.html';
+        }
+        
+        function goToMembers() {
+            window.location.href = 'members.html';
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+

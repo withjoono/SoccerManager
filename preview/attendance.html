@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출석 체크 - 드래그 앤 드롭</title>
+    <script src="gesture-handler.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .phone {
+            width: 100%;
+            max-width: 400px;
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        
+        .screen {
+            background: #F3F4F6;
+            border-radius: 32px;
+            overflow: hidden;
+            height: 850px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 상단 헤더 */
+        .header {
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px 20px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .stat-text {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6B7280;
+            margin-left: 4px;
+        }
+        
+        .instruction {
+            text-align: center;
+            font-size: 11px;
+            color: #6B7280;
+            padding: 8px 16px;
+            border-top: 1px solid #F3F4F6;
+        }
+        
+        /* 드롭존 */
+        .drop-zone {
+            padding: 16px;
+            min-height: 120px;
+            border: 2px dashed transparent;
+        }
+        
+        .present-zone {
+            background: #10B981;
+            border-bottom: 2px solid #059669;
+        }
+        
+        .absent-zone {
+            background: #EF4444;
+            border-top: 2px solid #DC2626;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .zone-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            margin-bottom: 12px;
+        }
+        
+        .zone-title {
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .zone-count {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .zone-members {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 40px;
+        }
+        
+        .zone-empty {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+        }
+        
+        /* 스크롤 영역 */
+        .scroll-container {
+            flex: 1;
+            background: #F3F4F6;
+            position: relative;
+        }
+        
+        .scroll-label {
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6B7280;
+        }
+        
+        .scroll-area {
+            width: 100%;
+            height: calc(100% - 50px);
+            overflow-x: scroll;
+            overflow-y: hidden;
+            padding: 20px;
+            cursor: grab;
+            user-select: none;
+        }
+        
+        .scroll-area:active {
+            cursor: grabbing;
+        }
+        
+        .scroll-content {
+            display: inline-flex;
+            gap: 16px;
+            align-items: center;
+            min-width: max-content;
+            padding-right: 20px;
+        }
+        
+        /* 회원 동그라미 */
+        .member-circle {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        
+        .member-circle:active {
+            cursor: grabbing;
+        }
+        
+        .member-circle.dragging {
+            opacity: 0.3;
+        }
+        
+        .circle {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            border: 3px solid #9CA3AF;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+        
+        .member-circle:hover .circle {
+            transform: scale(1.1);
+        }
+        
+        .circle.present {
+            border-color: #10B981;
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+        
+        .circle.absent {
+            border-color: #EF4444;
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+        
+        .circle.pending {
+            border-color: #9CA3AF;
+            background: linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%);
+        }
+        
+        .member-text {
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            line-height: 1.2;
+            padding: 4px;
+        }
+        
+        /* 작은 동그라미 (드롭존용) */
+        .member-circle-small {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .circle-small {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        
+        .circle-small .member-text {
+            font-size: 10px;
+            color: #1F2937;
+        }
+        
+        /* 하단 액션 */
+        .footer {
+            background: white;
+            border-top: 1px solid #E5E7EB;
+        }
+        
+        .quick-actions {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 16px;
+        }
+        
+        .quick-button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .quick-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .quick-button.all-present { background: #10B981; }
+        .quick-button.reset { background: #9CA3AF; }
+        .quick-button.save { background: #1E3A8A; }
+        
+        /* 하단 탭 네비게이션 */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            border-top: 1px solid #E5E7EB;
+            padding: 8px 0 12px;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            opacity: 0.5;
+        }
+        
+        .nav-label {
+            font-size: 10px;
+            color: #9CA3AF;
+            font-weight: 600;
+        }
+        
+        .nav-item.active .nav-icon {
+            opacity: 1;
+        }
+        
+        .nav-item.active .nav-label {
+            color: #1E3A8A;
+        }
+        
+        /* 스크롤바 */
+        .scroll-area::-webkit-scrollbar { height: 8px; }
+        .scroll-area::-webkit-scrollbar-track { background: #E5E7EB; border-radius: 4px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: #9CA3AF; border-radius: 4px; }
+        .scroll-area::-webkit-scrollbar-thumb:hover { background: #6B7280; }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <!-- 상단 헤더 -->
+            <div class="header">
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span style="color: #10B981; font-size: 24px;">✓</span>
+                        <span class="stat-text" style="color: #10B981;" id="presentCount">0</span>
+                        <span class="stat-label">출석</span>
+                    </div>
+                    <div class="stat-item">
+                        <span style="color: #EF4444; font-size: 24px;">✕</span>
+                        <span class="stat-text" style="color: #EF4444;" id="absentCount">0</span>
+                        <span class="stat-label">결석</span>
+                    </div>
+                    <div class="stat-item">
+                        <span style="color: #9CA3AF; font-size: 24px;">?</span>
+                        <span class="stat-text" style="color: #9CA3AF;" id="pendingCount">18</span>
+                        <span class="stat-label">대기</span>
+                    </div>
+                </div>
+                <div class="instruction">
+                    ⬅️ 좌우 스크롤 | ⬆️⬇️ 회원을 드래그하여 출석/결석 체크
+                </div>
+            </div>
+            
+            <!-- 출석 영역 -->
+            <div class="drop-zone present-zone" id="presentZone">
+                <div class="zone-header">
+                    <div class="zone-title">
+                        <span>⬇️ 출석</span>
+                    </div>
+                    <div class="zone-count" id="presentCountBig">0명</div>
+                </div>
+                <div class="zone-members" id="presentMembers">
+                    <div class="zone-empty">회원을 여기로 드래그하세요</div>
+                </div>
+            </div>
+            
+            <!-- 대기 회원 스크롤 영역 -->
+            <div class="scroll-container">
+                <div class="scroll-label">대기 중인 회원 (좌우 스크롤)</div>
+                <div class="scroll-area" id="scrollArea">
+                    <div class="scroll-content" id="pendingMembers">
+                        <!-- 회원들이 여기 생성됨 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 결석 영역 -->
+            <div class="drop-zone absent-zone" id="absentZone">
+                <div class="zone-header">
+                    <div class="zone-title">
+                        <span>⬆️ 결석</span>
+                    </div>
+                    <div class="zone-count" id="absentCountBig">0명</div>
+                </div>
+                <div class="zone-members" id="absentMembers">
+                    <div class="zone-empty">회원을 여기로 드래그하세요</div>
+                </div>
+            </div>
+            
+            <!-- 하단 액션 -->
+            <div class="footer">
+                <div class="quick-actions">
+                    <div class="quick-button all-present" id="btnAllPresent">✓ 전체 출석</div>
+                    <div class="quick-button reset" id="btnReset">↻ 초기화</div>
+                    <div class="quick-button save" id="btnSave">➡️ 완료</div>
+                </div>
+            </div>
+            
+            <!-- 하단 탭 네비게이션 -->
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon">🏠</div>
+                    <div class="nav-label">홈</div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon">✓</div>
+                    <div class="nav-label">출석체크</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">👥</div>
+                    <div class="nav-label">팀구성</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">🏆</div>
+                    <div class="nav-label">경기결과</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">📊</div>
+                    <div class="nav-label">통계순위</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">👤</div>
+                    <div class="nav-label">회원관리</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 회원 데이터
+        const members = [
+            { id: 1, name: '강민수', status: 'pending' },
+            { id: 2, name: '고은아', status: 'pending' },
+            { id: 3, name: '김철수', status: 'pending' },
+            { id: 4, name: '남궁민', status: 'pending' },
+            { id: 5, name: '문지호', status: 'pending' },
+            { id: 6, name: '박영희', status: 'pending' },
+            { id: 7, name: '배성호', status: 'pending' },
+            { id: 8, name: '서연우', status: 'pending' },
+            { id: 9, name: '안주영', status: 'pending' },
+            { id: 10, name: '오태석', status: 'pending' },
+            { id: 11, name: '유지민', status: 'pending' },
+            { id: 12, name: '윤하늘', status: 'pending' },
+            { id: 13, name: '이민준', status: 'pending' },
+            { id: 14, name: '정수아', status: 'pending' },
+            { id: 15, name: '최준호', status: 'pending' },
+            { id: 16, name: '한서진', status: 'pending' },
+            { id: 17, name: '홍길동', status: 'pending' },
+            { id: 18, name: '황지우', status: 'pending' },
+        ];
+
+        let draggedElement = null;
+        let draggedMemberId = null;
+
+        // 회원 동그라미 HTML 생성
+        function createBall(member, size = 'normal') {
+            const displayName = member.name;
+            const containerClass = size === 'small' ? 'member-circle-small' : 'member-circle';
+            const circleClass = size === 'small' ? 'circle-small' : 'circle';
+            
+            return `
+                <div class="${containerClass}" draggable="true" data-member-id="${member.id}">
+                    <div class="${circleClass} ${member.status}">
+                        <div class="member-text">${displayName}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 화면 렌더링
+        function render() {
+            const pendingMembers = members.filter(m => m.status === 'pending');
+            const presentMembers = members.filter(m => m.status === 'present');
+            const absentMembers = members.filter(m => m.status === 'absent');
+
+            // 대기 영역
+            const pendingContainer = document.getElementById('pendingMembers');
+            pendingContainer.innerHTML = pendingMembers.map(m => createBall(m)).join('');
+
+            // 출석 영역
+            const presentContainer = document.getElementById('presentMembers');
+            if (presentMembers.length === 0) {
+                presentContainer.innerHTML = '<div class="zone-empty">회원을 여기로 드래그하세요</div>';
+            } else {
+                presentContainer.innerHTML = presentMembers.map(m => createBall(m, 'small')).join('');
+            }
+
+            // 결석 영역
+            const absentContainer = document.getElementById('absentMembers');
+            if (absentMembers.length === 0) {
+                absentContainer.innerHTML = '<div class="zone-empty">회원을 여기로 드래그하세요</div>';
+            } else {
+                absentContainer.innerHTML = absentMembers.map(m => createBall(m, 'small')).join('');
+            }
+
+            // 카운트 업데이트
+            document.getElementById('presentCount').textContent = presentMembers.length;
+            document.getElementById('absentCount').textContent = absentMembers.length;
+            document.getElementById('pendingCount').textContent = pendingMembers.length;
+            document.getElementById('presentCountBig').textContent = presentMembers.length + '명';
+            document.getElementById('absentCountBig').textContent = absentMembers.length + '명';
+
+            // 드래그 이벤트 등록
+            attachDragEvents();
+        }
+
+        // 드래그 이벤트
+        function attachDragEvents() {
+            document.querySelectorAll('[draggable="true"]').forEach(ball => {
+                ball.addEventListener('dragstart', (e) => {
+                    draggedElement = ball;
+                    draggedMemberId = parseInt(ball.dataset.memberId);
+                    ball.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                ball.addEventListener('dragend', () => {
+                    ball.classList.remove('dragging');
+                    draggedElement = null;
+                });
+            });
+
+            // 드롭존 이벤트
+            ['presentZone', 'absentZone', 'scrollArea'].forEach(zoneId => {
+                const zone = document.getElementById(zoneId);
+                
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('drag-over');
+                });
+
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('drag-over');
+                });
+
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+                    
+                    if (!draggedMemberId) return;
+
+                    const member = members.find(m => m.id === draggedMemberId);
+                    if (!member) return;
+
+                    if (zoneId === 'presentZone') {
+                        member.status = 'present';
+                    } else if (zoneId === 'absentZone') {
+                        member.status = 'absent';
+                    } else {
+                        member.status = 'pending';
+                    }
+
+                    render();
+                });
+            });
+        }
+
+        // 빠른 버튼
+        document.getElementById('btnAllPresent').addEventListener('click', () => {
+            members.forEach(m => m.status = 'present');
+            render();
+            alert('✅ 전체 출석 처리되었습니다!');
+        });
+
+        document.getElementById('btnReset').addEventListener('click', () => {
+            members.forEach(m => m.status = 'pending');
+            render();
+            alert('↩️ 전체 초기화되었습니다!');
+        });
+
+        document.getElementById('btnSave').addEventListener('click', () => {
+            const present = members.filter(m => m.status === 'present').length;
+            const absent = members.filter(m => m.status === 'absent').length;
+            alert('💾 저장되었습니다!\n\n출석: ' + present + '명\n결석: ' + absent + '명');
+        });
+
+        // 초기 렌더링
+        render();
+    </script>
+</body>
+</html>

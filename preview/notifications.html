@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>알림</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .phone {
+            width: 100%;
+            max-width: 400px;
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        
+        .screen {
+            background: #F3F4F6;
+            border-radius: 32px;
+            overflow: hidden;
+            height: 850px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 헤더 */
+        .header {
+            background: white;
+            padding: 16px 20px;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .back-button {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .unread-count {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1E3A8A;
+        }
+        
+        /* 컨텐츠 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .notification-card {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        
+        .notification-unread {
+            border-left: 4px solid #1E3A8A;
+        }
+        
+        .notification-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+            font-size: 24px;
+        }
+        
+        .icon-match {
+            background: rgba(30, 58, 138, 0.1);
+        }
+        
+        .icon-team {
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        
+        .notification-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .unread-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 4px;
+            background: #1E3A8A;
+        }
+        
+        .notification-message {
+            font-size: 14px;
+            color: #6B7280;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .notification-date {
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+        
+        .delete-button {
+            padding: 4px;
+            cursor: pointer;
+            color: #6B7280;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-icon {
+            font-size: 64px;
+            opacity: 0.3;
+        }
+        
+        .empty-text {
+            font-size: 16px;
+            color: #9CA3AF;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <!-- 헤더 -->
+            <div class="header">
+                <div class="header-left">
+                    <div class="back-button" onclick="history.back()">←</div>
+                    <div class="header-title">알림</div>
+                </div>
+                <div class="unread-count">새 알림 2개</div>
+            </div>
+            
+            <!-- 컨텐츠 -->
+            <div class="content">
+                <!-- 알림 카드 1 -->
+                <div class="notification-card notification-unread" onclick="markAsRead(this)">
+                    <div class="notification-icon icon-match">⚽</div>
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-title">새로운 경기 등록</div>
+                            <div class="unread-dot"></div>
+                        </div>
+                        <div class="notification-message">
+                            12월 31일 오후 3시 서울 운동장에서 경기가 예정되어 있습니다.
+                        </div>
+                        <div class="notification-date">1시간 전</div>
+                    </div>
+                    <div class="delete-button" onclick="event.stopPropagation(); deleteNotification(this)">✕</div>
+                </div>
+                
+                <!-- 알림 카드 2 -->
+                <div class="notification-card notification-unread">
+                    <div class="notification-icon icon-team">👥</div>
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-title">팀 구성 완료</div>
+                            <div class="unread-dot"></div>
+                        </div>
+                        <div class="notification-message">
+                            12월 31일 1st 경기의 팀 구성이 완료되었습니다.
+                        </div>
+                        <div class="notification-date">3시간 전</div>
+                    </div>
+                    <div class="delete-button" onclick="event.stopPropagation(); deleteNotification(this)">✕</div>
+                </div>
+                
+                <!-- 알림 카드 3 (읽음) -->
+                <div class="notification-card">
+                    <div class="notification-icon icon-match">⚽</div>
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-title">경기 결과 등록</div>
+                        </div>
+                        <div class="notification-message">
+                            12월 24일 경기 결과가 등록되었습니다. A팀 2:3 B팀
+                        </div>
+                        <div class="notification-date">7일 전</div>
+                    </div>
+                    <div class="delete-button" onclick="event.stopPropagation(); deleteNotification(this)">✕</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function markAsRead(element) {
+            element.classList.remove('notification-unread');
+            const dot = element.querySelector('.unread-dot');
+            if (dot) dot.remove();
+            
+            // 새 알림 카운트 업데이트
+            const unreadCount = document.querySelectorAll('.notification-unread').length;
+            document.querySelector('.unread-count').textContent = `새 알림 ${unreadCount}개`;
+        }
+        
+        function deleteNotification(button) {
+            const card = button.closest('.notification-card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(100px)';
+            card.style.transition = 'all 0.3s';
+            
+            setTimeout(() => {
+                card.remove();
+                
+                // 새 알림 카운트 업데이트
+                const unreadCount = document.querySelectorAll('.notification-unread').length;
+                document.querySelector('.unread-count').textContent = `새 알림 ${unreadCount}개`;
+                
+                // 알림이 없으면 빈 상태 표시
+                if (document.querySelectorAll('.notification-card').length === 0) {
+                    document.querySelector('.content').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🔕</div>
+                            <div class="empty-text">알림이 없습니다</div>
+                        </div>
+                    `;
+                }
+            }, 300);
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통계 순위</title>
+    <script src="gesture-handler.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .phone {
+            width: 100%;
+            max-width: 400px;
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        
+        .screen {
+            background: #F3F4F6;
+            border-radius: 32px;
+            overflow: hidden;
+            height: 850px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 탭 헤더 */
+        .tab-header {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .tab {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            color: #6B7280;
+            font-weight: 600;
+        }
+        
+        .tab.active {
+            color: #1E3A8A;
+            border-bottom-color: #1E3A8A;
+        }
+        
+        /* 컨텐츠 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        /* 경기결과 탭 */
+        .filter-section {
+            background: white;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .filter-group {
+            margin-bottom: 12px;
+        }
+        
+        .filter-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 8px;
+        }
+        
+        .filter-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        
+        .filter-button {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #F3F4F6;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6B7280;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .filter-button.active {
+            background: #1E3A8A;
+            color: white;
+        }
+        
+        .match-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .match-date {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .match-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .status-completed { background: #10B981; }
+        .status-progress { background: #F59E0B; }
+        
+        .match-score {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .team-score {
+            text-align: center;
+        }
+        
+        .team-name {
+            font-size: 14px;
+            color: #6B7280;
+            margin-bottom: 4px;
+        }
+        
+        .score {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .vs {
+            font-size: 20px;
+            font-weight: bold;
+            color: #9CA3AF;
+        }
+        
+        .match-location {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 12px;
+        }
+        
+        .match-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #F3F4F6;
+            font-size: 14px;
+            color: #6B7280;
+            font-weight: 600;
+        }
+        
+        /* 개인순위 탭 */
+        .ranking-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .ranking-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .period-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #E5E7EB;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2937;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .period-dropdown-menu {
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .period-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #F3F4F6;
+            cursor: pointer;
+            font-size: 16px;
+            color: #1F2937;
+        }
+        
+        .period-option:last-child {
+            border-bottom: none;
+        }
+        
+        .period-option:hover {
+            background: #F3F4F6;
+        }
+        
+        .period-option.active {
+            background: #F3F4F6;
+            font-weight: 600;
+            color: #1E3A8A;
+        }
+        
+        .hidden { display: none; }
+        
+        .sort-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .sort-button {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #F3F4F6;
+            border: 1px solid #E5E7EB;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6B7280;
+            cursor: pointer;
+        }
+        
+        .sort-button.active {
+            background: #1E3A8A;
+            border-color: #1E3A8A;
+            color: white;
+        }
+        
+        .player-card {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .player-rank {
+            width: 48px;
+            height: 48px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .rank-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .player-info {
+            flex: 1;
+        }
+        
+        .player-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1F2937;
+            margin-bottom: 8px;
+        }
+        
+        .stats-grid {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 6px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #6B7280;
+        }
+        
+        .record-badge {
+            margin-top: 8px;
+            padding: 4px 8px;
+            background: #F3F4F6;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .record-text {
+            font-size: 11px;
+            color: #6B7280;
+            font-weight: 600;
+        }
+        
+        /* 하단 탭 */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            border-top: 1px solid #E5E7EB;
+            padding: 8px 0 12px;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .nav-icon { font-size: 20px; opacity: 0.5; }
+        .nav-label { font-size: 10px; color: #9CA3AF; font-weight: 600; }
+        .nav-item.active .nav-icon { opacity: 1; }
+        .nav-item.active .nav-label { color: #1E3A8A; }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <!-- 탭 헤더 -->
+            <div class="tab-header">
+                <div class="tab active" onclick="switchTab('matches')">
+                    <span>🏆</span>
+                    <span>경기결과</span>
+                </div>
+                <div class="tab" onclick="switchTab('players')">
+                    <span>👥</span>
+                    <span>개인순위</span>
+                </div>
+            </div>
+            
+            <!-- 컨텐츠 -->
+            <div class="content">
+                <!-- 경기결과 탭 -->
+                <div id="matchesTab">
+                    <!-- 날짜 필터 -->
+                    <div class="filter-section">
+                        <div class="filter-group">
+                            <div class="filter-label">월:</div>
+                            <div class="filter-scroll" id="monthFilter">
+                                <div class="filter-button" onclick="filterMonth(1)">1월</div>
+                                <div class="filter-button" onclick="filterMonth(2)">2월</div>
+                                <div class="filter-button" onclick="filterMonth(3)">3월</div>
+                                <div class="filter-button" onclick="filterMonth(4)">4월</div>
+                                <div class="filter-button" onclick="filterMonth(5)">5월</div>
+                                <div class="filter-button" onclick="filterMonth(6)">6월</div>
+                                <div class="filter-button" onclick="filterMonth(7)">7월</div>
+                                <div class="filter-button" onclick="filterMonth(8)">8월</div>
+                                <div class="filter-button" onclick="filterMonth(9)">9월</div>
+                                <div class="filter-button" onclick="filterMonth(10)">10월</div>
+                                <div class="filter-button" onclick="filterMonth(11)">11월</div>
+                                <div class="filter-button active" onclick="filterMonth(12)">12월</div>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <div class="filter-label">일:</div>
+                            <div class="filter-scroll" id="dayFilter">
+                                <div class="filter-button active" onclick="filterDay(null)">전체</div>
+                                <div class="filter-button" onclick="filterDay(24)">24일</div>
+                                <div class="filter-button" onclick="filterDay(31)">31일</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="match-card" data-month="12" data-day="31">
+                        <div class="match-header">
+                            <div class="match-date">12월 31일 1st</div>
+                            <div class="match-status status-completed">완료</div>
+                        </div>
+                        <div class="match-score">
+                            <div class="team-score">
+                                <div class="team-name">A팀</div>
+                                <div class="score">3</div>
+                            </div>
+                            <div class="vs">:</div>
+                            <div class="team-score">
+                                <div class="team-name">B팀</div>
+                                <div class="score">2</div>
+                            </div>
+                        </div>
+                        <div class="match-location">
+                            📍 서울 운동장
+                        </div>
+                        <div class="match-footer">
+                            자세히 보기 →
+                        </div>
+                    </div>
+                    
+                    <div class="match-card" data-month="12" data-day="31">
+                        <div class="match-header">
+                            <div class="match-date">12월 31일 2nd</div>
+                            <div class="match-status status-completed">완료</div>
+                        </div>
+                        <div class="match-score">
+                            <div class="team-score">
+                                <div class="team-name">A팀</div>
+                                <div class="score">1</div>
+                            </div>
+                            <div class="vs">:</div>
+                            <div class="team-score">
+                                <div class="team-name">B팀</div>
+                                <div class="score">1</div>
+                            </div>
+                        </div>
+                        <div class="match-footer">
+                            자세히 보기 →
+                        </div>
+                    </div>
+                    
+                    <div class="match-card" data-month="12" data-day="24">
+                        <div class="match-header">
+                            <div class="match-date">12월 24일 1st</div>
+                            <div class="match-status status-completed">완료</div>
+                        </div>
+                        <div class="match-score">
+                            <div class="team-score">
+                                <div class="team-name">A팀</div>
+                                <div class="score">2</div>
+                            </div>
+                            <div class="vs">:</div>
+                            <div class="team-score">
+                                <div class="team-name">B팀</div>
+                                <div class="score">3</div>
+                            </div>
+                        </div>
+                        <div class="match-location">
+                            📍 강남 축구장
+                        </div>
+                        <div class="match-footer">
+                            자세히 보기 →
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 개인순위 탭 -->
+                <div id="playersTab" class="hidden">
+                    <div class="ranking-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 24px;">🏅</span>
+                            <div class="ranking-title">선수 랭킹</div>
+                        </div>
+                        <div class="period-dropdown" onclick="togglePeriodDropdown()">
+                            <span id="periodText">월간</span>
+                            <span id="periodIcon">▼</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 기간 선택 드롭다운 -->
+                    <div id="periodDropdownMenu" class="period-dropdown-menu hidden">
+                        <div class="period-option" onclick="selectPeriod('weekly', '주간')">
+                            <span>주간</span>
+                            <span id="checkWeekly" style="display: none;">✓</span>
+                        </div>
+                        <div class="period-option active" onclick="selectPeriod('monthly', '월간')">
+                            <span>월간</span>
+                            <span id="checkMonthly">✓</span>
+                        </div>
+                        <div class="period-option" onclick="selectPeriod('yearly', '년간')">
+                            <span>년간</span>
+                            <span id="checkYearly" style="display: none;">✓</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 정렬 기준 -->
+                    <div class="sort-section">
+                        <div class="sort-button active" onclick="sortPlayers('goals')">⚽ 골</div>
+                        <div class="sort-button" onclick="sortPlayers('assists')">🎯 어시스트</div>
+                        <div class="sort-button" onclick="sortPlayers('attendance')">✅ 출석률</div>
+                        <div class="sort-button" onclick="sortPlayers('winRate')">🔥 승률</div>
+                    </div>
+                    
+                    <div class="player-card" data-goals="12" data-assists="5" data-attendance="95.5" data-winrate="68.2">
+                        <div class="player-rank">
+                            <div class="rank-number">1</div>
+                        </div>
+                        <div class="player-info">
+                            <div class="player-name">홍길동</div>
+                            <div class="stats-grid">
+                                <div class="stat-item">⏱️ 12 골</div>
+                                <div class="stat-item">🏆 5 어시스트</div>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item">✅ 95.5% 출석률</div>
+                                <div class="stat-item">🔥 68.2% 승률</div>
+                            </div>
+                            <div class="record-badge">
+                                <div class="record-text">경기: 22 | 승: 15 | 패: 2</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="player-card" data-goals="8" data-assists="11" data-attendance="90.0" data-winrate="60.0">
+                        <div class="player-rank">
+                            <div class="rank-number">2</div>
+                        </div>
+                        <div class="player-info">
+                            <div class="player-name">김철수</div>
+                            <div class="stats-grid">
+                                <div class="stat-item">⏱️ 8 골</div>
+                                <div class="stat-item">🏆 11 어시스트</div>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item">✅ 90.0% 출석률</div>
+                                <div class="stat-item">🔥 60.0% 승률</div>
+                            </div>
+                            <div class="record-badge">
+                                <div class="record-text">경기: 18 | 승: 11 | 패: 7</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="player-card" data-goals="7" data-assists="8" data-attendance="88.5" data-winrate="55.0">
+                        <div class="player-rank">
+                            <div class="rank-number">3</div>
+                        </div>
+                        <div class="player-info">
+                            <div class="player-name">박영희</div>
+                            <div class="stats-grid">
+                                <div class="stat-item">⏱️ 7 골</div>
+                                <div class="stat-item">🏆 8 어시스트</div>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item">✅ 88.5% 출석률</div>
+                                <div class="stat-item">🔥 55.0% 승률</div>
+                            </div>
+                            <div class="record-badge">
+                                <div class="record-text">경기: 20 | 승: 11 | 패: 9</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 하단 탭 -->
+            <div class="bottom-nav">
+                <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">홈</div></div>
+                <div class="nav-item"><div class="nav-icon">✓</div><div class="nav-label">출석체크</div></div>
+                <div class="nav-item"><div class="nav-icon">👥</div><div class="nav-label">팀구성</div></div>
+                <div class="nav-item"><div class="nav-icon">🏆</div><div class="nav-label">경기결과</div></div>
+                <div class="nav-item active"><div class="nav-icon">📊</div><div class="nav-label">통계순위</div></div>
+                <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">회원관리</div></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedMonth = 12;
+        let selectedDay = null;
+        let selectedPeriod = 'monthly';
+        let dropdownOpen = false;
+        
+        function switchTab(tab) {
+            // 탭 버튼 업데이트
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            event.target.closest('.tab').classList.add('active');
+            
+            // 컨텐츠 전환
+            if (tab === 'matches') {
+                document.getElementById('matchesTab').classList.remove('hidden');
+                document.getElementById('playersTab').classList.add('hidden');
+            } else {
+                document.getElementById('matchesTab').classList.add('hidden');
+                document.getElementById('playersTab').classList.remove('hidden');
+            }
+        }
+        
+        function filterMonth(month) {
+            selectedMonth = month;
+            selectedDay = null;
+            
+            // 월 버튼 활성화
+            document.querySelectorAll('#monthFilter .filter-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 일 필터 초기화
+            document.querySelectorAll('#dayFilter .filter-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('#dayFilter .filter-button').classList.add('active');
+            
+            // 경기 카드 필터링
+            applyMatchFilter();
+        }
+        
+        function filterDay(day) {
+            selectedDay = day;
+            
+            // 일 버튼 활성화
+            document.querySelectorAll('#dayFilter .filter-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 경기 카드 필터링
+            applyMatchFilter();
+        }
+        
+        function applyMatchFilter() {
+            document.querySelectorAll('.match-card').forEach(card => {
+                const cardMonth = parseInt(card.dataset.month);
+                const cardDay = parseInt(card.dataset.day);
+                
+                let show = true;
+                if (selectedMonth && cardMonth !== selectedMonth) show = false;
+                if (selectedDay && cardDay !== selectedDay) show = false;
+                
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+        
+        function togglePeriodDropdown() {
+            dropdownOpen = !dropdownOpen;
+            const menu = document.getElementById('periodDropdownMenu');
+            const icon = document.getElementById('periodIcon');
+            
+            if (dropdownOpen) {
+                menu.classList.remove('hidden');
+                icon.textContent = '▲';
+            } else {
+                menu.classList.add('hidden');
+                icon.textContent = '▼';
+            }
+        }
+        
+        function selectPeriod(period, text) {
+            selectedPeriod = period;
+            
+            // 텍스트 업데이트
+            document.getElementById('periodText').textContent = text;
+            
+            // 체크 표시 업데이트
+            document.getElementById('checkWeekly').style.display = period === 'weekly' ? 'inline' : 'none';
+            document.getElementById('checkMonthly').style.display = period === 'monthly' ? 'inline' : 'none';
+            document.getElementById('checkYearly').style.display = period === 'yearly' ? 'inline' : 'none';
+            
+            // active 클래스 업데이트
+            document.querySelectorAll('.period-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            event.target.closest('.period-option').classList.add('active');
+            
+            // 드롭다운 닫기
+            togglePeriodDropdown();
+            
+            // TODO: 기간별 데이터 로드
+            console.log('선택된 기간:', period);
+        }
+        
+        function sortPlayers(sortBy) {
+            // 정렬 버튼 활성화
+            document.querySelectorAll('.sort-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 플레이어 카드 수집
+            const playersContainer = document.getElementById('playersTab');
+            const playerCards = Array.from(playersContainer.querySelectorAll('.player-card'));
+            
+            // 정렬
+            playerCards.sort((a, b) => {
+                const aValue = parseFloat(a.dataset[sortBy === 'winRate' ? 'winrate' : sortBy]);
+                const bValue = parseFloat(b.dataset[sortBy === 'winRate' ? 'winrate' : sortBy]);
+                return bValue - aValue;
+            });
+            
+            // 순위 업데이트 및 재배치
+            playerCards.forEach((card, index) => {
+                card.querySelector('.rank-number').textContent = index + 1;
+                playersContainer.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>축구 경기 기록 앱 - UI 미리보기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            font-size: 36px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .screens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .phone {
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            position: relative;
+        }
+        
+        .phone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 25px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+        
+        .screen {
+            background: #F3F4F6;
+            border-radius: 32px;
+            overflow: hidden;
+            height: 650px;
+            position: relative;
+        }
+        
+        .screen-header {
+            background: #1E3A8A;
+            padding: 50px 20px 20px;
+            color: white;
+        }
+        
+        .screen-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .screen-content {
+            padding: 16px;
+            height: calc(100% - 150px);
+            overflow-y: auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .match-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
+        .badge-scheduled {
+            background: #3B82F6;
+            color: white;
+        }
+        
+        .badge-completed {
+            background: #10B981;
+            color: white;
+        }
+        
+        .member-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .member-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .member-position {
+            font-size: 14px;
+            color: #6B7280;
+        }
+        
+        .draggable-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 8px;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: move;
+        }
+        
+        .border-green {
+            border-left-color: #10B981;
+        }
+        
+        .border-blue {
+            border-left-color: #3B82F6;
+        }
+        
+        .border-red {
+            border-left-color: #EF4444;
+        }
+        
+        .border-gray {
+            border-left-color: #9CA3AF;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .btn-green {
+            background: #10B981;
+        }
+        
+        .btn-red {
+            background: #EF4444;
+        }
+        
+        .btn-blue {
+            background: #3B82F6;
+        }
+        
+        .stats-header {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            padding: 16px;
+            margin: -16px -16px 16px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+        
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid #E5E7EB;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #6B7280;
+        }
+        
+        .nav-item.active {
+            color: #1E3A8A;
+        }
+        
+        .fab {
+            position: absolute;
+            bottom: 80px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: #1E3A8A;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.4);
+        }
+        
+        .legend {
+            background: white;
+            padding: 12px;
+            margin: -16px -16px 16px;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 12px;
+            color: #6B7280;
+            text-align: center;
+        }
+        
+        .info-text {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            font-size: 18px;
+        }
+        
+        .rank-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background: #1E3A8A;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 16px;
+        }
+        
+        .stats-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .stat-badge {
+            background: #F3F4F6;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .random-btn {
+            background: #10B981;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚽ 축구 경기 기록 앱 - UI 미리보기</h1>
+        
+        <div class="screens-grid">
+            <!-- 홈 화면 -->
+            <div class="phone">
+                <div class="screen">
+                    <div class="screen-header">
+                        <div class="screen-title">홈</div>
+                    </div>
+                    <div class="screen-content">
+                        <div class="card match-card">
+                            <div>
+                                <div>
+                                    <span class="badge badge-scheduled">예정</span>
+                                    <span style="font-weight: 600;">12월 31일 (수)</span>
+                                </div>
+                                <div style="margin-top: 8px; color: #6B7280; font-size: 14px;">
+                                    ⚽ 서울 월드컵 경기장
+                                </div>
+                            </div>
+                            <div style="color: #9CA3AF; font-size: 24px;">›</div>
+                        </div>
+                        
+                        <div class="card match-card">
+                            <div style="flex: 1;">
+                                <div>
+                                    <span class="badge badge-completed">완료</span>
+                                    <span style="font-weight: 600;">12월 24일 (화)</span>
+                                </div>
+                                <div style="margin-top: 8px; color: #6B7280; font-size: 14px;">
+                                    ⚽ 잠실 운동장
+                                </div>
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #F3F4F6; text-align: center; font-weight: bold;">
+                                    A팀 3 : 2 B팀
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fab">+</div>
+                    <div class="bottom-nav">
+                        <div class="nav-item active">
+                            <div style="font-size: 24px;">⚽</div>
+                            <div>홈</div>
+                        </div>
+                        <div class="nav-item">
+                            <div style="font-size: 24px;">👥</div>
+                            <div>회원</div>
+                        </div>
+                        <div class="nav-item">
+                            <div style="font-size: 24px;">📊</div>
+                            <div>통계</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 회원 관리 화면 -->
+            <div class="phone">
+                <div class="screen">
+                    <div class="screen-header">
+                        <div class="screen-title">회원 관리</div>
+                    </div>
+                    <div class="screen-content">
+                        <div class="card member-card">
+                            <div class="member-avatar">홍</div>
+                            <div class="member-info">
+                                <div class="member-name">
+                                    홍길동
+                                    <span class="badge" style="background: #3B82F6; color: white; font-size: 10px;">#10</span>
+                                </div>
+                                <div class="member-position">FW • 010-1234-5678</div>
+                            </div>
+                            <div style="color: #EF4444; font-size: 20px;">🗑</div>
+                        </div>
+                        
+                        <div class="card member-card">
+                            <div class="member-avatar">김</div>
+                            <div class="member-info">
+                                <div class="member-name">
+                                    김철수
+                                    <span class="badge" style="background: #3B82F6; color: white; font-size: 10px;">#7</span>
+                                </div>
+                                <div class="member-position">MF • 010-2345-6789</div>
+                            </div>
+                            <div style="color: #EF4444; font-size: 20px;">🗑</div>
+                        </div>
+                        
+                        <div class="card member-card">
+                            <div class="member-avatar">박</div>
+                            <div class="member-info">
+                                <div class="member-name">
+                                    박영희
+                                    <span class="badge" style="background: #3B82F6; color: white; font-size: 10px;">#3</span>
+                                </div>
+                                <div class="member-position">DF • 010-3456-7890</div>
+                            </div>
+                            <div style="color: #EF4444; font-size: 20px;">🗑</div>
+                        </div>
+                    </div>
+                    <div class="fab">+</div>
+                    <div class="bottom-nav">
+                        <div class="nav-item">
+                            <div style="font-size: 24px;">⚽</div>
+                            <div>홈</div>
+                        </div>
+                        <div class="nav-item active">
+                            <div style="font-size: 24px;">👥</div>
+                            <div>회원</div>
+                        </div>
+                        <div class="nav-item">
+                            <div style="font-size: 24px;">📊</div>
+                            <div>통계</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 출석 체크 화면 (드래그 앤 드롭) -->
+            <div class="phone">
+                <div class="screen">
+                    <div class="screen-header">
+                        <div class="screen-title">출석 체크</div>
+                    </div>
+                    <div class="screen-content">
+                        <div class="stats-header">
+                            <div class="stat-item">
+                                <div class="stat-number" style="color: #10B981;">5</div>
+                                <div class="stat-label" style="color: #10B981;">출석</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" style="color: #EF4444;">2</div>
+                                <div class="stat-label" style="color: #EF4444;">결석</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" style="color: #9CA3AF;">1</div>
+                                <div class="stat-label" style="color: #9CA3AF;">대기</div>
+                            </div>
+                        </div>
+                        
+                        <div class="legend">
+                            ✋ 길게 눌러서 드래그하거나 버튼으로 상태 변경
+                        </div>
+                        
+                        <div class="draggable-card border-green">
+                            <div>
+                                <div class="member-name">홍길동</div>
+                                <div class="member-position">FW</div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn btn-green">✓</div>
+                                <div class="btn btn-red">✕</div>
+                            </div>
+                        </div>
+                        
+                        <div class="draggable-card border-green">
+                            <div>
+                                <div class="member-name">김철수</div>
+                                <div class="member-position">MF</div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn btn-green">✓</div>
+                                <div class="btn btn-red">✕</div>
+                            </div>
+                        </div>
+                        
+                        <div class="draggable-card border-red">
+                            <div>
+                                <div class="member-name">박영희</div>
+                                <div class="member-position">DF</div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn btn-green">✓</div>
+                                <div class="btn btn-red">✕</div>
+                            </div>
+                        </div>
+                        
+                        <div class="draggable-card border-gray">
+                            <div>
+                                <div class="member-name">이민수</div>
+                                <div class="member-position">GK</div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn btn-green">✓</div>
+                                <div class="btn btn-red">✕</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 팀 구성 화면 (드래그 앤 드롭) -->
+            <div class="phone">
+                <div class="screen">
+                    <div class="screen-header">
+                        <div class="screen-title">팀 구성</div>
+                    </div>
+                    <div class="screen-content">
+                        <div class="stats-header">
+                            <div class="stat-item">
+                                <div class="stat-number" style="color: #3B82F6;">3</div>
+                                <div class="stat-label">A팀</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" style="color: #EF4444;">2</div>
+                                <div class="stat-label">B팀</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" style="color: #9CA3AF;">0</div>
+                                <div class="stat-label">미배정</div>
+                            </div>
+                        </div>
+                        
+                        <div class="random-btn">
+                            🔀 랜덤 배정
+                        </div>
+                        
+                        <div class="legend">
+                            ✋ 길게 눌러서 드래그하거나 버튼으로 팀 변경
+                        </div>
+                        
+                        <div class="draggable-card border-blue">
+                            <div>
+                                <div class="member-name">홍길동</div>
+                                <div class="member-position">FW</div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn btn-blue">A</div>
+                                <div class="btn btn-red">B</div>
+                            </div>
+                        </div>
+                        
+                        <div class="draggable-card border-blue">
+                            <div>
+                                <div class="member-name">김철수</div>
+                                <div class="member-position">MF</div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn btn-blue">A</div>
+                                <div class="btn btn-red">B</div>
+                            </div>
+                        </div>
+                        
+                        <div class="draggable-card border-red">
+                            <div>
+                                <div class="member-name">박영희</div>
+                                <div class="member-position">DF</div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn btn-blue">A</div>
+                                <div class="btn btn-red">B</div>
+                            </div>
+                        </div>
+                        
+                        <div class="draggable-card border-blue">
+                            <div>
+                                <div class="member-name">이민수</div>
+                                <div class="member-position">GK</div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn btn-blue">A</div>
+                                <div class="btn btn-red">B</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 통계 화면 -->
+            <div class="phone">
+                <div class="screen">
+                    <div class="screen-header">
+                        <div class="screen-title">통계 순위</div>
+                    </div>
+                    <div class="screen-content" style="padding-top: 0;">
+                        <div style="background: white; padding: 16px; margin: 0 -16px 16px; border-bottom: 1px solid #E5E7EB;">
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <span style="background: #1E3A8A; color: white; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">골</span>
+                                <span style="background: #F3F4F6; color: #6B7280; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">어시스트</span>
+                                <span style="background: #F3F4F6; color: #6B7280; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">출석률</span>
+                                <span style="background: #F3F4F6; color: #6B7280; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">승률</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="display: flex; align-items: flex-start;">
+                            <div class="rank-badge">1</div>
+                            <div style="flex: 1;">
+                                <div class="member-name" style="margin-bottom: 12px;">홍길동</div>
+                                <div class="stats-grid">
+                                    <div class="stat-badge">⚽ <strong>12</strong> 골</div>
+                                    <div class="stat-badge">🤝 <strong>5</strong> 어시스트</div>
+                                    <div class="stat-badge">✓ <strong>95.5%</strong> 출석률</div>
+                                    <div class="stat-badge">🏆 <strong>68.2%</strong> 승률</div>
+                                </div>
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #F3F4F6; font-size: 12px; color: #6B7280;">
+                                    경기: 22 | 승: 15 | 패: 5 | 무: 2
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="display: flex; align-items: flex-start;">
+                            <div class="rank-badge">2</div>
+                            <div style="flex: 1;">
+                                <div class="member-name" style="margin-bottom: 12px;">김철수</div>
+                                <div class="stats-grid">
+                                    <div class="stat-badge">⚽ <strong>8</strong> 골</div>
+                                    <div class="stat-badge">🤝 <strong>11</strong> 어시스트</div>
+                                    <div class="stat-badge">✓ <strong>90.0%</strong> 출석률</div>
+                                    <div class="stat-badge">🏆 <strong>60.0%</strong> 승률</div>
+                                </div>
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #F3F4F6; font-size: 12px; color: #6B7280;">
+                                    경기: 20 | 승: 12 | 패: 6 | 무: 2
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="display: flex; align-items: flex-start;">
+                            <div class="rank-badge">3</div>
+                            <div style="flex: 1;">
+                                <div class="member-name" style="margin-bottom: 12px;">박영희</div>
+                                <div class="stats-grid">
+                                    <div class="stat-badge">⚽ <strong>6</strong> 골</div>
+                                    <div class="stat-badge">🤝 <strong>3</strong> 어시스트</div>
+                                    <div class="stat-badge">✓ <strong>88.0%</strong> 출석률</div>
+                                    <div class="stat-badge">🏆 <strong>55.5%</strong> 승률</div>
+                                </div>
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #F3F4F6; font-size: 12px; color: #6B7280;">
+                                    경기: 18 | 승: 10 | 패: 7 | 무: 1
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bottom-nav">
+                        <div class="nav-item">
+                            <div style="font-size: 24px;">⚽</div>
+                            <div>홈</div>
+                        </div>
+                        <div class="nav-item">
+                            <div style="font-size: 24px;">👥</div>
+                            <div>회원</div>
+                        </div>
+                        <div class="nav-item active">
+                            <div style="font-size: 24px;">📊</div>
+                            <div>통계</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <p class="info-text">
+            ℹ️ 위 화면은 목업입니다. 실제 앱은 웹 브라우저 또는 모바일 디바이스에서 확인하세요!<br>
+            🌐 웹: <strong>http://localhost:19006</strong> (자동으로 열립니다)
+        </p>
+    </div>
+</body>
+</html>
+
+
+
+
+
+

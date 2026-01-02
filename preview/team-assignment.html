@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>팀 구성</title>
+    <script src="gesture-handler.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .phone {
+            width: 100%;
+            max-width: 400px;
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        
+        .screen {
+            background: #F3F4F6;
+            border-radius: 32px;
+            overflow: hidden;
+            height: 850px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 헤더 */
+        .header {
+            background: white;
+            padding: 16px 20px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .reset-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #EF4444;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .add-team-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #1E3A8A;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .instruction {
+            font-size: 12px;
+            color: #6B7280;
+        }
+        
+        /* 대기 영역 */
+        .waiting-area {
+            background: white;
+            padding: 12px 0;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .waiting-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 20px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6B7280;
+        }
+        
+        .waiting-scroll {
+            display: flex;
+            gap: 12px;
+            padding: 0 20px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        /* 회원 동그라미 */
+        .member-circle {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+        }
+        
+        .circle {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%);
+            border-radius: 50%;
+            border: 3px solid #9CA3AF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .circle-text {
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+        
+        /* 팀 영역 */
+        .teams-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .team-card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border-left: 4px solid;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .team-name { font-size: 18px; }
+        .team-count { font-size: 16px; }
+        
+        .team-members {
+            padding: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            min-height: 100px;
+        }
+        
+        .team-member {
+            position: relative;
+        }
+        
+        .remove-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #EF4444;
+        }
+        
+        .empty-team {
+            font-size: 12px;
+            color: #9CA3AF;
+            font-style: italic;
+            align-self: center;
+            margin-top: 20px;
+        }
+        
+        .quick-assign {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+            border-top: 1px solid #F3F4F6;
+            padding-top: 12px;
+        }
+        
+        .quick-btn {
+            background: #F3F4F6;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #6B7280;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* 하단 버튼 */
+        .footer {
+            display: flex;
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #E5E7EB;
+            gap: 12px;
+        }
+        
+        .btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            border-radius: 8px;
+            gap: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .btn-random { background: #10B981; }
+        .btn-save { background: #1E3A8A; }
+        
+        /* 하단 탭 */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            border-top: 1px solid #E5E7EB;
+            padding: 8px 0 12px;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .nav-icon { font-size: 20px; opacity: 0.5; }
+        .nav-label { font-size: 10px; color: #9CA3AF; font-weight: 600; }
+        .nav-item.active .nav-icon { opacity: 1; }
+        .nav-item.active .nav-label { color: #1E3A8A; }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <!-- 헤더 -->
+            <div class="header">
+                <div class="header-top">
+                    <div class="header-title">팀 구성</div>
+                    <div class="header-buttons">
+                        <div class="reset-btn" onclick="resetTeams()">
+                            <span>🔄</span>
+                            <span>초기화</span>
+                        </div>
+                        <div class="add-team-btn" onclick="addTeam()">
+                            <span>➕</span>
+                            <span>팀 추가</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="instruction">회원을 드래그하여 팀에 배치하세요</div>
+            </div>
+            
+            <!-- 대기 영역 -->
+            <div class="waiting-area">
+                <div class="waiting-header">
+                    ⏳ 대기 중 (<span id="waitingCount">5</span>명)
+                </div>
+                <div class="waiting-scroll" id="waitingMembers">
+                    <div class="member-circle" draggable="true" data-id="1" data-name="강민수">
+                        <div class="circle"><div class="circle-text">강민수</div></div>
+                    </div>
+                    <div class="member-circle" draggable="true" data-id="2" data-name="김철수">
+                        <div class="circle"><div class="circle-text">김철수</div></div>
+                    </div>
+                    <div class="member-circle" draggable="true" data-id="3" data-name="박영희">
+                        <div class="circle"><div class="circle-text">박영희</div></div>
+                    </div>
+                    <div class="member-circle" draggable="true" data-id="4" data-name="이민준">
+                        <div class="circle"><div class="circle-text">이민준</div></div>
+                    </div>
+                    <div class="member-circle" draggable="true" data-id="5" data-name="정수아">
+                        <div class="circle"><div class="circle-text">정수아</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 팀 영역 -->
+            <div class="teams-container" id="teamsContainer">
+                <div class="team-card" style="border-left-color: #3B82F6;" data-team="teamA">
+                    <div class="team-header" style="background: #3B82F6;">
+                        <div class="team-name">A팀</div>
+                        <div class="team-count"><span class="team-member-count">0</span>명</div>
+                    </div>
+                    <div class="team-members" data-team-members="teamA">
+                        <div class="empty-team">회원을 드래그하여 배치하세요</div>
+                    </div>
+                </div>
+                
+                <div class="team-card" style="border-left-color: #EF4444;" data-team="teamB">
+                    <div class="team-header" style="background: #EF4444;">
+                        <div class="team-name">B팀</div>
+                        <div class="team-count"><span class="team-member-count">0</span>명</div>
+                    </div>
+                    <div class="team-members" data-team-members="teamB">
+                        <div class="empty-team">회원을 드래그하여 배치하세요</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 하단 버튼 -->
+            <div class="footer">
+                <div class="btn btn-random" onclick="randomAssign()">
+                    🔀 랜덤 배정
+                </div>
+                <div class="btn btn-save" onclick="goToMatchResult()">
+                    결과 기록
+                    <span style="font-size: 24px; margin-left: 4px;">→</span>
+                </div>
+            </div>
+            
+            <!-- 하단 탭 -->
+            <div class="bottom-nav">
+                <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">홈</div></div>
+                <div class="nav-item"><div class="nav-icon">✓</div><div class="nav-label">출석체크</div></div>
+                <div class="nav-item active"><div class="nav-icon">👥</div><div class="nav-label">팀구성</div></div>
+                <div class="nav-item"><div class="nav-icon">🏆</div><div class="nav-label">경기결과</div></div>
+                <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">통계순위</div></div>
+                <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">회원관리</div></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let draggedElement = null;
+        let teamCount = 2;
+        const teamColors = ['#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6'];
+        
+        // 드래그 시작
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('member-circle')) {
+                draggedElement = e.target;
+                e.target.style.opacity = '0.5';
+            }
+        });
+        
+        document.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('member-circle')) {
+                e.target.style.opacity = '1';
+            }
+        });
+        
+        // 드롭 영역 설정
+        document.querySelectorAll('.team-members').forEach(area => {
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.style.background = '#F3F4F6';
+            });
+            
+            area.addEventListener('dragleave', () => {
+                area.style.background = '';
+            });
+            
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.style.background = '';
+                
+                if (draggedElement) {
+                    const teamId = area.dataset.teamMembers;
+                    addMemberToTeam(draggedElement, teamId);
+                }
+            });
+        });
+        
+        function addMemberToTeam(memberElement, teamId) {
+            const memberId = memberElement.dataset.id;
+            const memberName = memberElement.dataset.name;
+            const teamArea = document.querySelector(`[data-team-members="${teamId}"]`);
+            
+            // 기존 empty 메시지 제거
+            const empty = teamArea.querySelector('.empty-team');
+            if (empty) empty.remove();
+            
+            // 회원 추가
+            const memberDiv = document.createElement('div');
+            memberDiv.className = 'team-member';
+            memberDiv.innerHTML = `
+                <div class="member-circle">
+                    <div class="circle" style="width: 50px; height: 50px;">
+                        <div class="circle-text" style="font-size: 11px;">${memberName}</div>
+                    </div>
+                </div>
+                <div class="remove-btn" onclick="removeMember(this)">✕</div>
+            `;
+            teamArea.insertBefore(memberDiv, teamArea.querySelector('.quick-assign'));
+            
+            // 대기에서 제거
+            memberElement.remove();
+            updateCounts();
+        }
+        
+        function removeMember(btn) {
+            const member = btn.parentElement;
+            const memberName = member.querySelector('.circle-text').textContent;
+            member.remove();
+            
+            // 대기로 복귀
+            const waiting = document.getElementById('waitingMembers');
+            const newMember = document.createElement('div');
+            newMember.className = 'member-circle';
+            newMember.draggable = true;
+            newMember.dataset.id = Date.now();
+            newMember.dataset.name = memberName;
+            newMember.innerHTML = `
+                <div class="circle"><div class="circle-text">${memberName}</div></div>
+            `;
+            waiting.appendChild(newMember);
+            updateCounts();
+        }
+        
+        function updateCounts() {
+            document.querySelectorAll('.team-card').forEach(card => {
+                const members = card.querySelectorAll('.team-member').length;
+                card.querySelector('.team-member-count').textContent = members;
+            });
+            
+            const waitingCount = document.querySelectorAll('#waitingMembers .member-circle').length;
+            document.getElementById('waitingCount').textContent = waitingCount;
+        }
+        
+        function addTeam() {
+            const letter = String.fromCharCode(65 + teamCount);
+            const color = teamColors[teamCount % teamColors.length];
+            teamCount++;
+            
+            const container = document.getElementById('teamsContainer');
+            const newTeam = document.createElement('div');
+            newTeam.className = 'team-card';
+            newTeam.style.borderLeftColor = color;
+            newTeam.innerHTML = `
+                <div class="team-header" style="background: ${color};">
+                    <div class="team-name">${letter}팀</div>
+                    <div class="team-count"><span class="team-member-count">0</span>명</div>
+                </div>
+                <div class="team-members" data-team-members="team${letter}">
+                    <div class="empty-team">회원을 드래그하여 배치하세요</div>
+                </div>
+            `;
+            container.appendChild(newTeam);
+            
+            // 드롭 이벤트 재등록
+            const area = newTeam.querySelector('.team-members');
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.style.background = '#F3F4F6';
+            });
+            area.addEventListener('dragleave', () => area.style.background = '');
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.style.background = '';
+                if (draggedElement) {
+                    addMemberToTeam(draggedElement, area.dataset.teamMembers);
+                }
+            });
+            
+            // 팀 추가 완료
+        }
+        
+        function randomAssign() {
+            const waiting = Array.from(document.querySelectorAll('#waitingMembers .member-circle'));
+            const teams = Array.from(document.querySelectorAll('.team-members'));
+            
+            waiting.forEach((member, index) => {
+                const teamIndex = index % teams.length;
+                addMemberToTeam(member, teams[teamIndex].dataset.teamMembers);
+            });
+            
+            // 랜덤 배정 완료
+        }
+        
+        function goToMatchResult() {
+            // 현재 팀 구성 데이터를 저장
+            const teamAMembers = Array.from(document.querySelectorAll('[data-team-members="teamA"] .team-member'))
+                .map(el => el.querySelector('.circle-text').textContent);
+            const teamBMembers = Array.from(document.querySelectorAll('[data-team-members="teamB"] .team-member'))
+                .map(el => el.querySelector('.circle-text').textContent);
+            
+            const teamData = {
+                teamA: teamAMembers,
+                teamB: teamBMembers,
+                timestamp: new Date().getTime()
+            };
+            
+            // localStorage에 저장
+            localStorage.setItem('currentTeamData', JSON.stringify(teamData));
+            
+            // 경기 결과 페이지로 이동
+            window.location.href = 'match-result.html';
+        }
+        
+        function resetTeams() {
+            if (confirm('모든 팀 배정을 초기화하고 처음부터 다시 구성하시겠습니까?')) {
+                // 모든 팀에서 회원 제거
+                document.querySelectorAll('.team-members .team-member').forEach(member => {
+                    member.remove();
+                });
+                
+                // 대기 영역에 모든 회원 추가 (예시)
+                const waiting = document.getElementById('waitingMembers');
+                const sampleMembers = ['강민수', '김철수', '박영희', '이민준', '정수아'];
+                
+                // 기존 대기 회원 제거
+                waiting.innerHTML = '';
+                
+                // 모든 회원을 대기로 추가
+                sampleMembers.forEach((name, idx) => {
+                    const newMember = document.createElement('div');
+                    newMember.className = 'member-circle';
+                    newMember.draggable = true;
+                    newMember.dataset.id = idx + 1;
+                    newMember.dataset.name = name;
+                    newMember.innerHTML = `
+                        <div class="circle"><div class="circle-text">${name}</div></div>
+                    `;
+                    waiting.appendChild(newMember);
+                });
+                
+                updateCounts();
+                alert('✅ 팀 구성이 초기화되었습니다!');
+            }
+        }
+    </script>
+</body>
+</html>
+

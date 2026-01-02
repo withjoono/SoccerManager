@@ -1,0 +1,125 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ========================================
+    // 헬퍼 함수
+    // ========================================
+    
+    // 인증된 사용자인지 확인
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Admin 권한 확인
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'admin';
+    }
+    
+    // Manager 이상 권한 확인
+    function isManager() {
+      return isAuthenticated() && 
+             (request.auth.token.role == 'admin' || 
+              request.auth.token.role == 'manager');
+    }
+    
+    // 파일 크기 제한 (10MB)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // 이미지 파일인지 확인
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // ========================================
+    // 회원 프로필 사진
+    // ========================================
+    match /members/{memberId}/profile/{fileName} {
+      // 읽기: 인증된 모든 사용자
+      allow read: if isAuthenticated();
+      
+      // 업로드: 본인 또는 Manager 이상
+      // - 이미지 파일만
+      // - 10MB 이하
+      allow write: if (isAuthenticated() && 
+                       request.auth.token.memberId == memberId &&
+                       isImage() && 
+                       isValidSize()) ||
+                      isManager();
+      
+      // 삭제: 본인 또는 Admin
+      allow delete: if (isAuthenticated() && 
+                        request.auth.token.memberId == memberId) ||
+                       isAdmin();
+    }
+    
+    // ========================================
+    // 공지사항 첨부파일
+    // ========================================
+    match /notices/{noticeId}/{fileName} {
+      // 읽기: 인증된 모든 사용자
+      allow read: if isAuthenticated();
+      
+      // 업로드: Manager 이상
+      // - 10MB 이하
+      allow write: if isManager() && isValidSize();
+      
+      // 삭제: Manager 이상
+      allow delete: if isManager();
+    }
+    
+    // ========================================
+    // 임시 업로드 (24시간 후 자동 삭제)
+    // ========================================
+    match /temp/{userId}/{fileName} {
+      // 읽기: 본인만
+      allow read: if isAuthenticated() && 
+                     request.auth.token.memberId == userId;
+      
+      // 업로드: 본인만
+      // - 10MB 이하
+      allow write: if isAuthenticated() && 
+                      request.auth.token.memberId == userId &&
+                      isValidSize();
+      
+      // 삭제: 본인 또는 Admin
+      allow delete: if (isAuthenticated() && 
+                        request.auth.token.memberId == userId) ||
+                       isAdmin();
+    }
+    
+    // ========================================
+    // 팀 로고
+    // ========================================
+    match /teams/{teamId}/logo/{fileName} {
+      // 읽기: 인증된 모든 사용자
+      allow read: if isAuthenticated();
+      
+      // 업로드: Manager 이상
+      // - 이미지 파일만
+      // - 5MB 이하
+      allow write: if isManager() && 
+                      isImage() && 
+                      request.resource.size < 5 * 1024 * 1024;
+      
+      // 삭제: Admin만
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // 기본 규칙: 모든 다른 경로는 차단
+    // ========================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+
+
+
+
+

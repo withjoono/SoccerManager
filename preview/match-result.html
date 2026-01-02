@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경기 결과</title>
+    <script src="gesture-handler.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .phone {
+            width: 100%;
+            max-width: 400px;
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        
+        .screen {
+            background: #F3F4F6;
+            border-radius: 32px;
+            overflow: hidden;
+            height: 850px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 헤더 */
+        .header {
+            background: white;
+            padding: 16px;
+            border-bottom: 1px solid #E5E7EB;
+            text-align: center;
+        }
+        
+        .match-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .match-date {
+            font-size: 14px;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+        
+        /* 스코어보드 */
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .team-score {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 140px;
+        }
+        
+        .team-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #1F2937;
+            margin-bottom: 8px;
+        }
+        
+        .add-goal-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .vs {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6B7280;
+        }
+        
+        /* 팀 카드 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .team-card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border-left: 4px solid;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .team-header {
+            padding: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .team-members {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 12px;
+            gap: 12px;
+        }
+        
+        .member-circle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .circle {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%);
+            border-radius: 50%;
+            border: 3px solid #9CA3AF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .circle-text {
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+        
+        /* 골 기록 */
+        .goals-section {
+            border-top: 1px solid #F3F4F6;
+            padding: 12px;
+        }
+        
+        .goals-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 8px;
+        }
+        
+        .goal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #F3F4F6;
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+        
+        .goal-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .goal-minute {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1E3A8A;
+        }
+        
+        .goal-scorer {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2937;
+        }
+        
+        .goal-assister {
+            font-size: 12px;
+            color: #6B7280;
+        }
+        
+        .remove-goal-btn {
+            cursor: pointer;
+            color: #EF4444;
+        }
+        
+        /* 하단 버튼 */
+        .footer {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .save-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #1E3A8A;
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .next-match-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: white;
+            color: #1E3A8A;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #1E3A8A;
+        }
+        
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: flex-end;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .close-btn {
+            font-size: 28px;
+            cursor: pointer;
+            color: #6B7280;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .input {
+            width: 100%;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 16px;
+        }
+        
+        .member-selector {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 8px 0;
+        }
+        
+        .member-option {
+            position: relative;
+            opacity: 0.5;
+            cursor: pointer;
+        }
+        
+        .member-option.selected {
+            opacity: 1;
+        }
+        
+        .selected-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #10B981;
+            border-radius: 12px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .no-assist {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            background: #F3F4F6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .no-assist-text {
+            font-size: 12px;
+            color: #6B7280;
+            font-weight: 600;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .cancel-btn {
+            background: #F3F4F6;
+            color: #1F2937;
+        }
+        
+        .confirm-btn {
+            background: #1E3A8A;
+            color: white;
+        }
+        
+        /* 하단 탭 */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            border-top: 1px solid #E5E7EB;
+            padding: 8px 0 12px;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .nav-icon { font-size: 20px; opacity: 0.5; }
+        .nav-label { font-size: 10px; color: #9CA3AF; font-weight: 600; }
+        .nav-item.active .nav-icon { opacity: 1; }
+        .nav-item.active .nav-label { color: #1E3A8A; }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <!-- 헤더 -->
+            <div class="header">
+                <div class="match-title">오늘의 경기</div>
+                <div class="match-date">2025년 12월 31일</div>
+            </div>
+            
+            <!-- 스코어보드 -->
+            <div class="scoreboard">
+                <div class="team-score" style="border-color: #3B82F6;">
+                    <div class="team-name" style="color: #3B82F6;">A팀</div>
+                    <div class="score" id="scoreA">2</div>
+                    <div class="add-goal-btn" style="background: #3B82F6;" onclick="openGoalModal('A')">
+                        ➕ 골 추가
+                    </div>
+                </div>
+                
+                <div class="vs">VS</div>
+                
+                <div class="team-score" style="border-color: #EF4444;">
+                    <div class="team-name" style="color: #EF4444;">B팀</div>
+                    <div class="score" id="scoreB">1</div>
+                    <div class="add-goal-btn" style="background: #EF4444;" onclick="openGoalModal('B')">
+                        ➕ 골 추가
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 팀 카드들 -->
+            <div class="content" id="teamsContent">
+                <!-- 팀 구성 데이터가 JavaScript로 동적으로 로드됩니다 -->
+            </div>
+            
+            <!-- 저장 버튼 -->
+            <div class="footer">
+                <div class="save-btn" onclick="saveResult()">
+                    ✅ 12월 31일 1st 경기 저장
+                </div>
+                <div class="next-match-btn" onclick="startNextMatch()">
+                    다음 경기 시작 (2nd)
+                    <span style="font-size: 24px;">▶</span>
+                </div>
+            </div>
+            
+            <!-- 하단 탭 -->
+            <div class="bottom-nav">
+                <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">홈</div></div>
+                <div class="nav-item"><div class="nav-icon">✓</div><div class="nav-label">출석체크</div></div>
+                <div class="nav-item"><div class="nav-icon">👥</div><div class="nav-label">팀구성</div></div>
+                <div class="nav-item active"><div class="nav-icon">🏆</div><div class="nav-label">경기결과</div></div>
+                <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">통계순위</div></div>
+                <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">회원관리</div></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 골 추가 모달 -->
+    <div class="modal" id="goalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">⚽ 골 기록</div>
+                <div class="close-btn" onclick="closeGoalModal()">✕</div>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">득점자 선택 *</label>
+                <div class="member-selector" id="scorerSelector">
+                    <div class="member-option" onclick="selectScorer('모름')">
+                        <div class="no-assist"><div class="no-assist-text">모름</div></div>
+                    </div>
+                    <div class="member-option" onclick="selectScorer('자책골')">
+                        <div class="no-assist" style="background: #FEE2E2;">
+                            <div class="no-assist-text" style="color: #EF4444;">자책골</div>
+                        </div>
+                    </div>
+                    <div class="member-option" onclick="selectScorer('강민수')">
+                        <div class="circle"><div class="circle-text">강민수</div></div>
+                    </div>
+                    <div class="member-option" onclick="selectScorer('김철수')">
+                        <div class="circle"><div class="circle-text">김철수</div></div>
+                    </div>
+                    <div class="member-option" onclick="selectScorer('박영희')">
+                        <div class="circle"><div class="circle-text">박영희</div></div>
+                    </div>
+                    <div class="member-option" onclick="selectScorer('이민준')">
+                        <div class="circle"><div class="circle-text">이민준</div></div>
+                    </div>
+                    <div class="member-option" onclick="selectScorer('정수아')">
+                        <div class="circle"><div class="circle-text">정수아</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">어시스트 (선택)</label>
+                <div class="member-selector" id="assisterSelector">
+                    <div class="member-option" onclick="selectAssister('모름')">
+                        <div class="no-assist"><div class="no-assist-text">모름</div></div>
+                    </div>
+                    <div class="member-option selected" onclick="selectAssister(null)">
+                        <div class="no-assist"><div class="no-assist-text">없음</div></div>
+                    </div>
+                    <div class="member-option" onclick="selectAssister('강민수')">
+                        <div class="circle"><div class="circle-text">강민수</div></div>
+                    </div>
+                    <div class="member-option" onclick="selectAssister('김철수')">
+                        <div class="circle"><div class="circle-text">김철수</div></div>
+                    </div>
+                    <div class="member-option" onclick="selectAssister('박영희')">
+                        <div class="circle"><div class="circle-text">박영희</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <div class="modal-btn cancel-btn" onclick="closeGoalModal()">취소</div>
+                <div class="modal-btn confirm-btn" onclick="addGoal()">추가</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedTeam = null;
+        let selectedScorer = null;
+        let selectedAssister = null;
+        
+        // 페이지 로드 시 팀 구성 데이터 불러오기
+        function loadTeamData() {
+            const savedData = localStorage.getItem('currentTeamData');
+            const teamsContent = document.getElementById('teamsContent');
+            
+            if (!savedData) {
+                // 저장된 데이터가 없으면 기본 데이터 사용
+                teamsContent.innerHTML = `
+                    <div class="team-card" data-team="teamA" style="border-left-color: #3B82F6;">
+                        <div class="team-header" style="background: #3B82F6;">A팀 (0명)</div>
+                        <div class="team-members"></div>
+                        <div class="goals-section" style="display: none;">
+                            <div class="goals-title">⚽ 골 기록</div>
+                            <div class="goals-list"></div>
+                        </div>
+                    </div>
+                    <div class="team-card" data-team="teamB" style="border-left-color: #EF4444;">
+                        <div class="team-header" style="background: #EF4444;">B팀 (0명)</div>
+                        <div class="team-members"></div>
+                        <div class="goals-section" style="display: none;">
+                            <div class="goals-title">⚽ 골 기록</div>
+                            <div class="goals-list"></div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const teamData = JSON.parse(savedData);
+                
+                // A팀 카드 생성
+                const teamAMembers = teamData.teamA.map(name => `
+                    <div class="member-circle">
+                        <div class="circle"><div class="circle-text">${name}</div></div>
+                    </div>
+                `).join('');
+                
+                // B팀 카드 생성
+                const teamBMembers = teamData.teamB.map(name => `
+                    <div class="member-circle">
+                        <div class="circle"><div class="circle-text">${name}</div></div>
+                    </div>
+                `).join('');
+                
+                teamsContent.innerHTML = `
+                    <div class="team-card" data-team="teamA" style="border-left-color: #3B82F6;">
+                        <div class="team-header" style="background: #3B82F6;">
+                            A팀 (${teamData.teamA.length}명)
+                        </div>
+                        <div class="team-members">
+                            ${teamAMembers}
+                        </div>
+                        <div class="goals-section" style="display: none;">
+                            <div class="goals-title">⚽ 골 기록</div>
+                            <div class="goals-list"></div>
+                        </div>
+                    </div>
+                    <div class="team-card" data-team="teamB" style="border-left-color: #EF4444;">
+                        <div class="team-header" style="background: #EF4444;">
+                            B팀 (${teamData.teamB.length}명)
+                        </div>
+                        <div class="team-members">
+                            ${teamBMembers}
+                        </div>
+                        <div class="goals-section" style="display: none;">
+                            <div class="goals-title">⚽ 골 기록</div>
+                            <div class="goals-list"></div>
+                        </div>
+                    </div>
+                `;
+                
+                // 골 기록 모달의 선택지도 업데이트
+                updateScorerOptions(teamData);
+                
+                console.log('✅ 팀 데이터 로드 완료:', teamData);
+            } catch (e) {
+                console.error('❌ 팀 데이터 로드 실패:', e);
+            }
+        }
+        
+        function updateScorerOptions(teamData) {
+            // A팀 모달용 회원 목록 (나중에 골 추가 시 사용)
+            window.teamAMembers = teamData.teamA;
+            window.teamBMembers = teamData.teamB;
+        }
+        
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', loadTeamData);
+        
+        function openGoalModal(team) {
+            selectedTeam = team;
+            selectedScorer = null;
+            selectedAssister = null;
+            
+            // 해당 팀의 멤버로 득점자/어시스트 선택지 업데이트
+            const members = team === 'A' ? (window.teamAMembers || []) : (window.teamBMembers || []);
+            updateModalOptions(members);
+            
+            document.getElementById('goalModal').classList.add('active');
+        }
+        
+        function updateModalOptions(members) {
+            // 득점자 선택지 업데이트
+            const scorerSelector = document.getElementById('scorerSelector');
+            const existingOptions = scorerSelector.querySelectorAll('.member-option:not(:nth-child(1)):not(:nth-child(2))');
+            existingOptions.forEach(el => el.remove());
+            
+            members.forEach(name => {
+                const option = document.createElement('div');
+                option.className = 'member-option';
+                option.onclick = () => selectScorer(name);
+                option.innerHTML = `
+                    <div class="circle"><div class="circle-text">${name}</div></div>
+                `;
+                scorerSelector.appendChild(option);
+            });
+            
+            // 어시스트 선택지 업데이트
+            const assisterSelector = document.getElementById('assisterSelector');
+            const existingAssistOptions = assisterSelector.querySelectorAll('.member-option:not(:nth-child(1)):not(:nth-child(2))');
+            existingAssistOptions.forEach(el => el.remove());
+            
+            members.forEach(name => {
+                const option = document.createElement('div');
+                option.className = 'member-option';
+                option.onclick = () => selectAssister(name);
+                option.innerHTML = `
+                    <div class="circle"><div class="circle-text">${name}</div></div>
+                `;
+                assisterSelector.appendChild(option);
+            });
+        }
+        
+        function closeGoalModal() {
+            document.getElementById('goalModal').classList.remove('active');
+        }
+        
+        function selectScorer(name) {
+            selectedScorer = name;
+            document.querySelectorAll('#scorerSelector .member-option').forEach(el => {
+                el.classList.remove('selected');
+                if (el.textContent.includes(name)) {
+                    el.classList.add('selected');
+                    el.innerHTML += '<div class="selected-badge">✓</div>';
+                } else {
+                    const badge = el.querySelector('.selected-badge');
+                    if (badge) badge.remove();
+                }
+            });
+        }
+        
+        function selectAssister(name) {
+            selectedAssister = name;
+            document.querySelectorAll('#assisterSelector .member-option').forEach(el => {
+                el.classList.remove('selected');
+                const badge = el.querySelector('.selected-badge');
+                if (badge) badge.remove();
+            });
+            
+            if (name === null) {
+                document.querySelector('#assisterSelector .member-option').classList.add('selected');
+            } else {
+                document.querySelectorAll('#assisterSelector .member-option').forEach(el => {
+                    if (el.textContent.includes(name)) {
+                        el.classList.add('selected');
+                        el.innerHTML += '<div class="selected-badge">✓</div>';
+                    }
+                });
+            }
+        }
+        
+        function addGoal() {
+            if (!selectedScorer) {
+                alert('득점자를 선택해주세요');
+                return;
+            }
+            
+            // 점수 업데이트
+            const scoreEl = document.getElementById('score' + selectedTeam);
+            const currentScore = parseInt(scoreEl.textContent);
+            scoreEl.textContent = currentScore + 1;
+            
+            // 골 기록 추가
+            const teamCard = document.querySelector(`[data-team="team${selectedTeam}"]`);
+            const goalsSection = teamCard.querySelector('.goals-section');
+            const goalsList = teamCard.querySelector('.goals-list');
+            
+            goalsSection.style.display = 'block';
+            
+            const goalItem = document.createElement('div');
+            goalItem.className = 'goal-item';
+            goalItem.innerHTML = `
+                <div class="goal-info">
+                    <div class="goal-scorer">⚽ ${selectedScorer}</div>
+                    ${selectedAssister ? `<div class="goal-assister">(도움: ${selectedAssister})</div>` : ''}
+                </div>
+                <div class="remove-goal-btn" onclick="this.parentElement.remove()">✕</div>
+            `;
+            goalsList.appendChild(goalItem);
+            
+            closeGoalModal();
+        }
+        
+        function removeGoal(team, index) {
+            const scoreEl = document.getElementById('score' + team);
+            const currentScore = parseInt(scoreEl.textContent);
+            if (currentScore > 0) {
+                scoreEl.textContent = currentScore - 1;
+            }
+        }
+        
+        function saveResult() {
+            const scoreA = document.getElementById('scoreA').textContent;
+            const scoreB = document.getElementById('scoreB').textContent;
+            alert(`✅ 경기 결과가 저장되었습니다!\n\nA팀 ${scoreA} : ${scoreB} B팀`);
+        }
+        
+        function startNextMatch() {
+            const scoreA = document.getElementById('scoreA').textContent;
+            const scoreB = document.getElementById('scoreB').textContent;
+            
+            if (confirm(`현재 경기를 저장하고 2nd 경기를 시작하시겠습니까?\n\n현재 결과: A팀 ${scoreA} : ${scoreB} B팀`)) {
+                alert('✅ 2nd 경기가 생성되었습니다!\n\n이전 팀 구성을 유지한 채로 팀 구성 페이지로 이동합니다.');
+                window.location.href = 'team-assignment.html';
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경기 등록</title>
+    <script src="gesture-handler.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .phone {
+            width: 100%;
+            max-width: 400px;
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        
+        .screen {
+            background: #F3F4F6;
+            border-radius: 32px;
+            overflow: hidden;
+            height: 850px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 헤더 */
+        .header {
+            background: white;
+            padding: 16px 20px;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .notification-icon {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        /* 컨텐츠 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .form-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1F2937;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        .days-selector {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .day-button {
+            flex: 1;
+            padding: 12px 0;
+            border-radius: 8px;
+            background: #F3F4F6;
+            border: 2px solid #E5E7EB;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6B7280;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .day-button.active {
+            background: #1E3A8A;
+            border-color: #1E3A8A;
+            color: white;
+        }
+        
+        .day-button.sunday {
+            border-color: #EF4444;
+        }
+        
+        .day-button.saturday {
+            border-color: #3B82F6;
+        }
+        
+        .period-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .date-selector {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+        }
+        
+        .date-button {
+            padding: 4px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #1E3A8A;
+        }
+        
+        .date-display {
+            text-align: center;
+        }
+        
+        .period-label {
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 4px;
+        }
+        
+        .date-text {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .period-divider {
+            font-size: 18px;
+            font-weight: bold;
+            color: #6B7280;
+        }
+        
+        .time-input-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+        
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .time-input {
+            width: 60px;
+            height: 50px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1F2937;
+            background: #F3F4F6;
+        }
+        
+        .time-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #6B7280;
+        }
+        
+        .time-separator {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6B7280;
+        }
+        
+        .switch-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .switch-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1F2937;
+        }
+        
+        .switch-description {
+            font-size: 12px;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+        
+        .switch {
+            width: 51px;
+            height: 31px;
+            background: #ccc;
+            border-radius: 31px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .switch.active {
+            background: #1E3A8A;
+        }
+        
+        .switch-thumb {
+            width: 27px;
+            height: 27px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+        
+        .switch.active .switch-thumb {
+            left: 22px;
+        }
+        
+        .submit-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #1E3A8A;
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 24px;
+            border: none;
+            width: 100%;
+        }
+        
+        /* 하단 탭 */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            border-top: 1px solid #E5E7EB;
+            padding: 8px 0 12px;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .nav-icon { font-size: 20px; opacity: 0.5; }
+        .nav-label { font-size: 10px; color: #9CA3AF; font-weight: 600; }
+        .nav-item.active .nav-icon { opacity: 1; }
+        .nav-item.active .nav-label { color: #1E3A8A; }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="screen">
+            <!-- 헤더 -->
+            <div class="header">
+                <div class="header-title">경기 등록</div>
+                <div class="notification-icon" onclick="openNotifications()">🔔</div>
+            </div>
+            
+            <!-- 컨텐츠 -->
+            <div class="content">
+                <form onsubmit="submitMatch(event)">
+                    <!-- 경기 제목 -->
+                    <div class="form-label">경기 제목 *</div>
+                    <input type="text" class="form-input" id="titleInput" placeholder="예: 정기 경기, 친선전 등" required>
+                    
+                    <!-- 요일 선택 -->
+                    <div class="form-label">요일 * (중복 선택 가능)</div>
+                    <div class="days-selector">
+                        <div class="day-button sunday" onclick="toggleDay(0, this)">일</div>
+                        <div class="day-button" onclick="toggleDay(1, this)">월</div>
+                        <div class="day-button" onclick="toggleDay(2, this)">화</div>
+                        <div class="day-button active" onclick="toggleDay(3, this)">수</div>
+                        <div class="day-button" onclick="toggleDay(4, this)">목</div>
+                        <div class="day-button" onclick="toggleDay(5, this)">금</div>
+                        <div class="day-button saturday" onclick="toggleDay(6, this)">토</div>
+                    </div>
+                    
+                    <!-- 시작시간 -->
+                    <div class="form-label">시작시간 *</div>
+                    <div class="time-input-row">
+                        <div class="time-input-group">
+                            <input type="number" class="time-input" id="startHour" value="15" min="0" max="23">
+                            <span class="time-label">시</span>
+                        </div>
+                        <span class="time-separator">:</span>
+                        <div class="time-input-group">
+                            <input type="number" class="time-input" id="startMinute" value="00" min="0" max="59">
+                            <span class="time-label">분</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 종료시간 -->
+                    <div class="form-label">종료시간 *</div>
+                    <div class="time-input-row">
+                        <div class="time-input-group">
+                            <input type="number" class="time-input" id="endHour" value="17" min="0" max="23">
+                            <span class="time-label">시</span>
+                        </div>
+                        <span class="time-separator">:</span>
+                        <div class="time-input-group">
+                            <input type="number" class="time-input" id="endMinute" value="00" min="0" max="59">
+                            <span class="time-label">분</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 기간 선택 -->
+                    <div class="form-label">기간 *</div>
+                    <div class="period-container">
+                        <div class="date-selector">
+                            <div class="date-button" onclick="changeDate(-7, true)">◀</div>
+                            <div class="date-display">
+                                <div class="period-label">시작일</div>
+                                <div class="date-text" id="startDateText">12/31</div>
+                            </div>
+                            <div class="date-button" onclick="changeDate(7, true)">▶</div>
+                        </div>
+                        <div class="period-divider">~</div>
+                        <div class="date-selector">
+                            <div class="date-button" onclick="changeDate(-7, false)">◀</div>
+                            <div class="date-display">
+                                <div class="period-label">종료일</div>
+                                <div class="date-text" id="endDateText">3/31</div>
+                            </div>
+                            <div class="date-button" onclick="changeDate(7, false)">▶</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 경기장 -->
+                    <div class="form-label">경기장</div>
+                    <input type="text" class="form-input" placeholder="경기장 이름을 입력하세요">
+                    
+                    <!-- 메모 -->
+                    <div class="form-label">메모</div>
+                    <textarea class="form-input" rows="4" placeholder="추가 정보를 입력하세요"></textarea>
+                    
+                    <!-- 알림 발송 -->
+                    <div class="switch-container">
+                        <div>
+                            <div class="switch-label">회원 알림 발송</div>
+                            <div class="switch-description">모든 회원에게 경기 등록 알림을 발송합니다</div>
+                        </div>
+                        <div class="switch active" onclick="toggleSwitch(this)">
+                            <div class="switch-thumb"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 등록 버튼 -->
+                    <button type="submit" class="submit-button">
+                        📅 경기 등록
+                    </button>
+                </form>
+            </div>
+            
+            <!-- 하단 탭 -->
+            <div class="bottom-nav">
+                <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">홈</div></div>
+                <div class="nav-item active"><div class="nav-icon">➕</div><div class="nav-label">경기등록</div></div>
+                <div class="nav-item"><div class="nav-icon">✓</div><div class="nav-label">출석체크</div></div>
+                <div class="nav-item"><div class="nav-icon">👥</div><div class="nav-label">팀구성</div></div>
+                <div class="nav-item"><div class="nav-icon">🏆</div><div class="nav-label">경기결과</div></div>
+                <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">통계순위</div></div>
+                <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">회원/팀</div></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let startDate = new Date(2025, 11, 31); // 12월 31일
+        let endDate = new Date(2026, 2, 31); // 3개월 후 (3월 31일)
+        let selectedDays = [3]; // 수요일
+        
+        function changeDate(days, isStart) {
+            if (isStart) {
+                startDate.setDate(startDate.getDate() + days);
+                updateDateDisplay();
+            } else {
+                endDate.setDate(endDate.getDate() + days);
+                updateDateDisplay();
+            }
+        }
+        
+        function updateDateDisplay() {
+            document.getElementById('startDateText').textContent = 
+                `${startDate.getMonth() + 1}/${startDate.getDate()}`;
+            document.getElementById('endDateText').textContent = 
+                `${endDate.getMonth() + 1}/${endDate.getDate()}`;
+        }
+        
+        function toggleDay(day, element) {
+            element.classList.toggle('active');
+            if (selectedDays.includes(day)) {
+                selectedDays = selectedDays.filter(d => d !== day);
+            } else {
+                selectedDays.push(day);
+            }
+        }
+        
+        function toggleSwitch(element) {
+            element.classList.toggle('active');
+        }
+        
+        function submitMatch(event) {
+            event.preventDefault();
+            
+            if (selectedDays.length === 0) {
+                alert('⚠️ 요일을 선택해주세요.');
+                return;
+            }
+            
+            const title = document.getElementById('titleInput').value;
+            const startHour = document.getElementById('startHour').value.padStart(2, '0');
+            const startMinute = document.getElementById('startMinute').value.padStart(2, '0');
+            const endHour = document.getElementById('endHour').value.padStart(2, '0');
+            const endMinute = document.getElementById('endMinute').value.padStart(2, '0');
+            const startTime = `${startHour}:${startMinute}`;
+            const endTime = `${endHour}:${endMinute}`;
+            const notificationEnabled = document.querySelector('.switch').classList.contains('active');
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            const selectedDayNames = selectedDays.map(d => dayNames[d]).join(', ');
+            
+            // 생성될 경기 수 계산
+            let count = 0;
+            let currentDate = new Date(startDate);
+            while (currentDate <= endDate) {
+                if (selectedDays.includes(currentDate.getDay())) {
+                    count++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            if (notificationEnabled) {
+                alert(`✅ ${count}개의 경기가 등록되었습니다!\n\n- 제목: ${title}\n- 요일: 매주 ${selectedDayNames}요일\n- 시간: ${startTime} ~ ${endTime}\n\n모든 회원에게 알림이 발송되었습니다.`);
+            } else {
+                alert(`✅ ${count}개의 경기가 등록되었습니다!\n\n- 제목: ${title}\n- 요일: 매주 ${selectedDayNames}요일\n- 시간: ${startTime} ~ ${endTime}`);
+            }
+        }
+        
+        function openNotifications() {
+            window.location.href = 'notifications.html';
+        }
+        
+        // 초기 날짜 표시
+        updateDateDisplay();
+    </script>
+</body>
+</html>
+
