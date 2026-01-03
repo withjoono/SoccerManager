@@ -36,15 +36,13 @@ export const errorHandler = (
     message = 'Invalid ID format';
   }
 
-  // 개발 환경에서는 스택 트레이스 출력
-  if (process.env.NODE_ENV === 'development') {
-    console.error('Error:', err);
-  }
+  // 에러 로그 출력
+  console.error('Error:', err.message);
+  console.error('Stack:', err.stack);
 
   res.status(statusCode).json({
     success: false,
-    error: message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    error: `${message} - ${err.stack}`,
   });
 };
 
